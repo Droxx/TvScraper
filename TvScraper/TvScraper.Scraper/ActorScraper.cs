@@ -80,6 +80,11 @@ namespace TvScraper.Scraper
             logger.LogInformation("Completed scraping for actors, waiting until next batch available");
         }
 
+        /// <summary>
+        /// Grabs the MazeIDs of shows which have not had their actors scraped
+        /// </summary>
+        /// <param name="batchSize">Specify the maximum number of IDs to fetch</param>
+        /// <returns>A list of TvMaze IDs for shows awaiting actors</returns>
         private async Task<List<int>> GetNextXScrapingBatch(int batchSize)
         {
             var next10UnscrapedShows = database
@@ -92,6 +97,9 @@ namespace TvScraper.Scraper
             return await next10UnscrapedShows.ToListAsync();
         }
 
+        /// <summary>
+        /// Stores the actors in the database after removing duplicates
+        /// </summary>
         private void StoreActors(IEnumerable<Person> actors)
         {
             logger.LogDebug($"Storing {actors.Count()} actors");
@@ -119,6 +127,9 @@ namespace TvScraper.Scraper
             database.Actors.AddRange(toStore);
         }
 
+        /// <summary>
+        /// Stores records in the joining table between cast and actors
+        /// </summary>
         private void StoreLinks(int showId, IEnumerable<CastMember> cast)
         {
             logger.LogDebug($"Storing {cast.Count()} links for show {showId}");

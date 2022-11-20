@@ -93,6 +93,11 @@ namespace TvScraper.Scraper
             await database.Shows.AddRangeAsync(showsToBeInserted);
         }
 
+        /// <summary>
+        /// Gets the next page number for shows when starting the scraper, we look at the most recent show we have imported and 
+        /// see which page it would reside on (given a page max of 250 shows)
+        /// </summary>
+        /// <returns></returns>
         private async Task<int> GetStartingPageNumber()
         {
 
