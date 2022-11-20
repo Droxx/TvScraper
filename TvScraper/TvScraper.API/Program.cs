@@ -1,5 +1,6 @@
 using TvScraper.Database;
 using TvScraper.Scraper;
+using TvScraper.Scraper.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,9 +16,12 @@ builder.Services.AddDbContext<DataContext>();
 builder.Services.AddSingleton<ITvMazeClient, TvMazeClient>();
 builder.Services.AddScoped<IActorScraper, ActorScraper>();
 builder.Services.AddScoped<IShowScraper, ShowScraper>();
-builder.Services.AddSingleton<ScrapeService>();
+builder.Services.AddSingleton<ShowScrapeService>();
 builder.Services.AddHostedService(
-    provider => provider.GetRequiredService<ScrapeService>());
+    provider => provider.GetRequiredService<ShowScrapeService>());
+builder.Services.AddSingleton<ActorScrapeService>();
+builder.Services.AddHostedService(
+    provider => provider.GetRequiredService<ActorScrapeService>());
 
 var app = builder.Build();
 

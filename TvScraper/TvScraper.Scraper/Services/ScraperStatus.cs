@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TvScraper.Scraper
+namespace TvScraper.Scraper.Services
 {
-   public record ScraperStatus(bool IsEnabled);
+    public record ScraperStatus(bool IsEnabled);
 }

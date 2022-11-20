@@ -8,33 +8,34 @@ using System.Text;
 using System.Threading.Tasks;
 using TvScraper.Database;
 
-namespace TvScraper.Scraper
+namespace TvScraper.Scraper.Services
 {
-    public class ScrapeService : BackgroundService
+    public class ShowScrapeService : BackgroundService
     {
-        private readonly ILogger<ScrapeService> logger;
+        private readonly ILogger<ShowScrapeService> logger;
 
         private readonly IServiceScopeFactory scopeFactory;
 
         public bool IsEnabled { get; set; } = true;
         private int executionCount = 0;
 
-        public ScrapeService(
-            ILogger<ScrapeService> logger,
+        public ShowScrapeService(
+            ILogger<ShowScrapeService> logger,
             IServiceScopeFactory scopeFactory)
         {
             this.logger = logger;
-            this.scopeFactory= scopeFactory;
+            this.scopeFactory = scopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken token)
         {
-            using(var database = new DataContext())
+            using (var database = new DataContext())
             {
                 database.Database.EnsureCreated();
             }
-
-            using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromHours(12));
+            
+            // Every 2 hours scrape for new shows
+            using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromHours(2));
             do
             {
                 if (token.IsCancellationRequested)
@@ -45,15 +46,12 @@ namespace TvScraper.Scraper
                 {
                     await using AsyncServiceScope asyncScope = scopeFactory.CreateAsyncScope();
 
-                    var actorScraper = asyncScope.ServiceProvider.GetRequiredService<IActorScraper>();
-                    await actorScraper.Execute(token);
-
                     var showScraper = asyncScope.ServiceProvider.GetRequiredService<IShowScraper>();
                     await showScraper.Execute(token);
-                   
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
-                    logger.LogError(ex, "Error thrown while scraping!");
+                    logger.LogError(ex, "Error thrown while scraping shows!");
                     break;
                 }
 

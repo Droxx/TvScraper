@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TvScraper.Scraper;
+using TvScraper.Scraper.Services;
 
 namespace TvScraper.API.Controllers
 {
@@ -9,10 +9,10 @@ namespace TvScraper.API.Controllers
     public class ScraperStatusController : ControllerBase
     {
         private readonly ILogger<ScraperStatusController> _logger;
-        private readonly ScrapeService scrapeService;
+        private readonly ShowScrapeService scrapeService;
 
         public ScraperStatusController(ILogger<ScraperStatusController> logger,
-            ScrapeService scrapeService)
+            ShowScrapeService scrapeService)
         {
             _logger = logger;
             this.scrapeService = scrapeService;

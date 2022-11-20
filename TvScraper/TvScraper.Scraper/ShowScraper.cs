@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -32,7 +33,7 @@ namespace TvScraper.Scraper
 
         public async Task Execute(CancellationToken token)
         {
-            var page = GetStartingPageNumber();
+            var page = await GetStartingPageNumber();
             IEnumerable<Show> result = null;
             do
             {
@@ -52,13 +53,13 @@ namespace TvScraper.Scraper
                         break;
                     }
                 }
-                StoreBatch(result);
-                database.SaveChanges();
+                await StoreBatch(result);
+                await database.SaveChangesAsync();
                 page++;
             } while (result.Count() > 0);
         }
 
-        private void StoreBatch(IEnumerable<Show> shows)
+        private async Task StoreBatch(IEnumerable<Show> shows)
         {
             var collectionIds = shows.Select(s => s.Id);
 
@@ -80,16 +81,16 @@ namespace TvScraper.Scraper
                 });
             }
 
-            database.Shows.AddRange(showsToBeInserted);
+            await database.Shows.AddRangeAsync(showsToBeInserted);
         }
 
-        private int GetStartingPageNumber()
+        private async Task<int> GetStartingPageNumber()
         {
 
-            var mostRecentShow = database
+            var mostRecentShow = await database
                 .Shows
                 .OrderByDescending(s => s.TvMazeId)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             var mostRecentId = mostRecentShow?.TvMazeId ?? 0;
 

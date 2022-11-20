@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -32,7 +33,7 @@ namespace TvScraper.Scraper
     
         public async Task Execute(CancellationToken token)
         {
-            var showsToScrape = GetNextXScrapingBatch(250);
+            var showsToScrape = await GetNextXScrapingBatch(250);
             IEnumerable<CastMember> result = null;
             do
             {
@@ -57,15 +58,16 @@ namespace TvScraper.Scraper
                         continue;
                     }
                     StoreActors(result.Select(c => c.Person));
-                    database.SaveChanges();
+                    await database.SaveChangesAsync();
                     StoreLinks(showId, result);
-                    database.SaveChanges();
+                    await database.SaveChangesAsync();
                 }
-            } while(showsToScrape.Count > 0);
+                showsToScrape = await GetNextXScrapingBatch(250);
+            } while (showsToScrape.Count > 0);
            
         }
 
-        private List<int> GetNextXScrapingBatch(int batchSize)
+        private async Task<List<int>> GetNextXScrapingBatch(int batchSize)
         {
             var next10UnscrapedShows = database
                 .Shows
@@ -74,7 +76,7 @@ namespace TvScraper.Scraper
                 .Take(batchSize)
                 .Select(s => s.TvMazeId);
 
-            return next10UnscrapedShows.ToList();
+            return await next10UnscrapedShows.ToListAsync();
         }
 
         private void StoreActors(IEnumerable<Person> actors)
