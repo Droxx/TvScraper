@@ -13,8 +13,6 @@ namespace TvScraper.Scraper
     {
         private readonly ILogger<ScrapeService> logger;
         private readonly TvMazeClient mazeClient;
-        private readonly ActorScraper actorScraper;
-        private readonly ShowScraper showScraper;
 
         public bool IsEnabled { get; set; } = true;
         private int executionCount = 0;
@@ -25,8 +23,6 @@ namespace TvScraper.Scraper
         {
             logger = logger;
             mazeClient = mazeClient;
-            actorScraper = new ActorScraper();
-            showScraper = new ShowScraper();
         }
 
         protected override async Task ExecuteAsync(CancellationToken token)
@@ -39,8 +35,23 @@ namespace TvScraper.Scraper
             using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromHours(12));
             do
             {
-                await showScraper.Execute(token);
-                await actorScraper.Execute(token);
+                try
+                {
+                    using (var showScraper = new ShowScraper())
+                    {
+                        await showScraper.Execute(token);
+                    }
+
+                    using (var actorScraper = new ActorScraper())
+                    {
+                        await actorScraper.Execute(token);
+                    }
+                }catch(Exception ex)
+                {
+                    logger.LogError(ex, "Error thrown while scraping!");
+                    break;
+                }
+
                 executionCount++;
             } while (
                     !token.IsCancellationRequested &&

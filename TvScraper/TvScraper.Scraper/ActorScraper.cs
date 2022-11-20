@@ -10,8 +10,20 @@ using TvScraper.Scraper.TvMazeModel;
 namespace TvScraper.Scraper
 {
 
-    public class ActorScraper
+    public class ActorScraper : IDisposable
     {
+        private readonly DataContext database;
+
+        public ActorScraper()
+        {
+            database = new DataContext();
+        }
+
+        public void Dispose()
+        {
+            database.Dispose();
+        }
+    
         public async Task Execute(CancellationToken token)
         {
             // TODO: Make sure this client is shared globally
@@ -37,78 +49,70 @@ namespace TvScraper.Scraper
                     }
                     StoreActors(result.Select(c => c.Person));
                     StoreLinks(showId, result);
+                    database.SaveChanges();
                 }
             } while(showsToScrape.Count > 0);
            
         }
 
-        private List<int> GetNextXScrapingBatch(int batchSize) 
+        private List<int> GetNextXScrapingBatch(int batchSize)
         {
-            using(var database = new DataContext())
-            {
-                var next10UnscrapedShows = database
-                    .Shows
-                    .OrderBy(s => s.TvMazeId)
-                    .Where(s => !s.ActorsScraped)
-                    .Take(batchSize)
-                    .Select(s => s.TvMazeId);
+            var next10UnscrapedShows = database
+                .Shows
+                .OrderBy(s => s.TvMazeId)
+                .Where(s => !s.ActorsScraped)
+                .Take(batchSize)
+                .Select(s => s.TvMazeId);
 
-                return next10UnscrapedShows.ToList();
-            }
+            return next10UnscrapedShows.ToList();
         }
 
         private void StoreActors(IEnumerable<Person> actors)
         {
-            using(var database = new DataContext())
+
+            var actorIds = actors.Select(a => a.Id);
+            var duplicateActors = database
+                .Actors
+                .Where(a => actorIds.Contains(a.TvMazeId))
+                .Select(a => a.TvMazeId)
+                .ToList();
+
+            var toStore = new List<Database.Model.Actor>();
+
+            foreach (var validActor in actors.Where(a => !duplicateActors.Contains(a.Id)))
             {
-                var actorIds = actors.Select(a => a.Id);
-                var duplicateActors = database
-                    .Actors
-                    .Where(a => actorIds.Contains(a.TvMazeId))
-                    .Select(a => a.TvMazeId)
-                    .ToList();
-
-                var toStore = new List<Database.Model.Actor>();
-
-                foreach(var validActor in actors.Where(a => !duplicateActors.Contains(a.Id)))
+                toStore.Add(new Database.Model.Actor
                 {
-                    toStore.Add(new Database.Model.Actor
-                    {
-                        Name = validActor.Name,
-                        DateOfBirth = validActor.Birthday,
-                        TvMazeId = validActor.Id
-                    });
-                }
-
-                database.Actors.AddRange(toStore);
-                database.SaveChanges();
+                    Name = validActor.Name,
+                    DateOfBirth = validActor.Birthday,
+                    TvMazeId = validActor.Id
+                });
             }
+
+            database.Actors.AddRange(toStore);
         }
 
         private void StoreLinks(int showId, IEnumerable<CastMember> cast)
         {
-            using (var database = new DataContext())
+
+            var localDbShow = database.Shows.FirstOrDefault(s => s.TvMazeId == showId);
+
+            foreach (var member in cast)
             {
-                var localDbShow = database.Shows.FirstOrDefault(s => s.TvMazeId == showId);
+                var localDbCast = database.Actors.FirstOrDefault(a => a.TvMazeId == member.Person.Id);
 
-                foreach (var member in cast)
+                if (localDbShow == null || localDbCast == null)
                 {
-                    var localDbCast = database.Actors.FirstOrDefault(a => a.TvMazeId == member.Person.Id);
-
-                    if (localDbShow == null || localDbCast == null)
-                    {
-                        throw new KeyNotFoundException();
-                    }
-
-                    database.CastMembers.Add(new Database.Model.CastMember
-                    {
-                        ActorId = localDbCast.Id,
-                        ShowId = localDbShow.Id
-                    });
+                    throw new KeyNotFoundException();
                 }
-                localDbShow.ActorsScraped = true;
-                database.SaveChanges();
+
+                database.CastMembers.Add(new Database.Model.CastMember
+                {
+                    ActorId = localDbCast.Id,
+                    ShowId = localDbShow.Id
+                });
             }
+            localDbShow.ActorsScraped = true;
         }
 
     }

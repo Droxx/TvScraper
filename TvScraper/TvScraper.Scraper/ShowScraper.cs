@@ -9,8 +9,20 @@ using TvScraper.Scraper.TvMazeModel;
 
 namespace TvScraper.Scraper
 {
-    public class ShowScraper
+    public class ShowScraper : IDisposable
     {
+        private readonly DataContext database;
+
+        public ShowScraper()
+        {
+            database = new DataContext();
+        }
+
+        public void Dispose()
+        {
+            database.Dispose();
+        }
+
         public async Task Execute(CancellationToken token)
         {
             var client = new TvMazeClient();
@@ -35,52 +47,48 @@ namespace TvScraper.Scraper
                     }
                 }
                 StoreBatch(result);
+                database.SaveChanges();
                 page++;
             } while (result.Count() > 0);
         }
 
         private void StoreBatch(IEnumerable<Show> shows)
         {
-            using(var database = new DataContext())
+            var collectionIds = shows.Select(s => s.Id);
+
+            var duplicateShows = database
+                .Shows
+                .Where(s => collectionIds.Contains(s.TvMazeId))
+                .Select(s => s.TvMazeId);
+
+            var showsToBeInserted = new List<Database.Model.Show>();
+
+            foreach (var validShow in shows.Where(s => !duplicateShows.Contains(s.Id)))
             {
-                var collectionIds = shows.Select(s => s.Id);
-
-                var duplicateShows = database
-                    .Shows
-                    .Where(s => collectionIds.Contains(s.TvMazeId))
-                    .Select(s => s.TvMazeId);
-
-                var showsToBeInserted = new List<Database.Model.Show>();
-
-                foreach(var validShow in shows.Where(s => !duplicateShows.Contains(s.Id)))
+                showsToBeInserted.Add(new Database.Model.Show
                 {
-                    showsToBeInserted.Add(new Database.Model.Show
-                    {
-                        Name = validShow.Name,
-                        TvMazeId = validShow.Id,
-                        TvMazeUrl = validShow.Url,
-                        LastScrapeDate = DateTime.UtcNow
-                    });
-                }
-
-                database.Shows.AddRange(showsToBeInserted);
-                database.SaveChanges();
+                    Name = validShow.Name,
+                    TvMazeId = validShow.Id,
+                    TvMazeUrl = validShow.Url,
+                    LastScrapeDate = DateTime.UtcNow
+                });
             }
+
+            database.Shows.AddRange(showsToBeInserted);
         }
 
         private int GetStartingPageNumber()
         {
-            using(var database = new DataContext())
-            {
-                var mostRecentShow = database
-                    .Shows
-                    .OrderByDescending(s => s.TvMazeId)
-                    .FirstOrDefault();
 
-                var mostRecentId = mostRecentShow?.TvMazeId ?? 0;
+            var mostRecentShow = database
+                .Shows
+                .OrderByDescending(s => s.TvMazeId)
+                .FirstOrDefault();
 
-                return (int)Math.Floor(mostRecentId / 250.0);
-            }
+            var mostRecentId = mostRecentShow?.TvMazeId ?? 0;
+
+            return (int)Math.Floor(mostRecentId / 250.0);
+
         }
     }
 }
