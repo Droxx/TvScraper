@@ -29,6 +29,7 @@ namespace TvScraper.Scraper.Services
 
         protected override async Task ExecuteAsync(CancellationToken token)
         {
+            logger.LogInformation("Starting actor scraping service");
             using (var database = new DataContext())
             {
                 database.Database.EnsureCreated();
@@ -45,10 +46,12 @@ namespace TvScraper.Scraper.Services
                 }
                 try
                 {
+                    logger.LogInformation("Beginning scrape for actors of recently imported shows");
                     await using AsyncServiceScope asyncScope = scopeFactory.CreateAsyncScope();
 
                     var actorScraper = asyncScope.ServiceProvider.GetRequiredService<IActorScraper>();
                     await actorScraper.Execute(token);
+                    logger.LogInformation("Scrape for actors completed, waiting for next sync time");
                 }
                 catch (Exception ex)
                 {

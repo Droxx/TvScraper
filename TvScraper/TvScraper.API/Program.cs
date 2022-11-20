@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using TvScraper.Database;
 using TvScraper.Scraper;
 using TvScraper.Scraper.Services;
@@ -11,8 +12,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<DataContext>();
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.AddConsole();
+builder.Logging.AddDebug().SetMinimumLevel(LogLevel.Debug);
 
+
+builder.Services.AddDbContext<DataContext>();
 builder.Services.AddSingleton<ITvMazeClient, TvMazeClient>();
 builder.Services.AddScoped<IActorScraper, ActorScraper>();
 builder.Services.AddScoped<IShowScraper, ShowScraper>();

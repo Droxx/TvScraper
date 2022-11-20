@@ -47,14 +47,17 @@ namespace TvScraper.Scraper
                     request.AddParameter(arg.Name, arg.Value, ParameterType.QueryString);
                 }
             }
+            logger.LogDebug($"Calling Maze endpoint '{endpoint}'");
             RestResponse<T> response = client.Execute<T>(request);
 
             if (response != null && response.IsSuccessful)
             {
+                logger.LogTrace($"Data recieved OK");
                 return response.Data;
             }
             else if(response != null)
             {
+                logger.LogWarning("Bad response recieved from Maze API");
                 if(response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
                     throw new HttpRequestException("(429) Too Many Requests", null, response.StatusCode);

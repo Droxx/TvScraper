@@ -29,6 +29,7 @@ namespace TvScraper.Scraper.Services
 
         protected override async Task ExecuteAsync(CancellationToken token)
         {
+            logger.LogInformation("Starting show scraping service");
             using (var database = new DataContext())
             {
                 database.Database.EnsureCreated();
@@ -44,10 +45,12 @@ namespace TvScraper.Scraper.Services
                 }
                 try
                 {
+                    logger.LogInformation("Beginning scrape for unknown TV shows");
                     await using AsyncServiceScope asyncScope = scopeFactory.CreateAsyncScope();
 
                     var showScraper = asyncScope.ServiceProvider.GetRequiredService<IShowScraper>();
                     await showScraper.Execute(token);
+                    logger.LogInformation("Scrape for TV shows completed, waiting for next sync time");
                 }
                 catch (Exception ex)
                 {

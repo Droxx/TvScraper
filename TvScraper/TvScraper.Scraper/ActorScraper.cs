@@ -49,6 +49,7 @@ namespace TvScraper.Scraper
                 {
                     try
                     {
+                        logger.LogDebug($"Fetching actor information for show {showId}");
                         result = await client.Get<IEnumerable<CastMember>>($"shows/{showId}/cast", token);
                     }
                     catch (HttpRequestException ex)
@@ -66,7 +67,7 @@ namespace TvScraper.Scraper
                     }
                     if(result == null)
                     {
-                        logger.LogError($"A null result was returned when scraping actors for show {showId}")
+                        logger.LogError($"A null result was returned when scraping actors for show {showId}");
                         continue;
                     }
                     StoreActors(result.Select(c => c.Person));
@@ -76,7 +77,7 @@ namespace TvScraper.Scraper
                 }
                 showsToScrape = await GetNextXScrapingBatch(250);
             } while (showsToScrape.Count > 0);
-           
+            logger.LogInformation("Completed scraping for actors, waiting until next batch available");
         }
 
         private async Task<List<int>> GetNextXScrapingBatch(int batchSize)
@@ -93,6 +94,7 @@ namespace TvScraper.Scraper
 
         private void StoreActors(IEnumerable<Person> actors)
         {
+            logger.LogDebug($"Storing {actors.Count()} actors");
 
             var actorIds = actors.Select(a => a.Id);
             var duplicateActors = database
@@ -112,13 +114,14 @@ namespace TvScraper.Scraper
                     TvMazeId = validActor.Id
                 });
             }
+            logger.LogDebug($"Duplicates removed, writing {toStore} actors to database");
 
             database.Actors.AddRange(toStore);
         }
 
         private void StoreLinks(int showId, IEnumerable<CastMember> cast)
         {
-
+            logger.LogDebug($"Storing {cast.Count()} links for show {showId}");
             var localDbShow = database.Shows.FirstOrDefault(s => s.TvMazeId == showId);
 
             foreach (var member in cast)

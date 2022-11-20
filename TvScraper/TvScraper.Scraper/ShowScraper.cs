@@ -62,10 +62,12 @@ namespace TvScraper.Scraper
                 await database.SaveChangesAsync();
                 page++;
             } while (result.Count() > 0);
+            logger.LogInformation("Completed scraping shows, exiting scraper");
         }
 
         private async Task StoreBatch(IEnumerable<Show> shows)
         {
+            logger.LogDebug($"Storing batch of {shows.Count()} shows");
             var collectionIds = shows.Select(s => s.Id);
 
             var duplicateShows = database
@@ -74,6 +76,8 @@ namespace TvScraper.Scraper
                 .Select(s => s.TvMazeId);
 
             var showsToBeInserted = new List<Database.Model.Show>();
+
+            logger.LogDebug($"Duplicates removed and {shows.Count()} shows to be written to database");
 
             foreach (var validShow in shows.Where(s => !duplicateShows.Contains(s.Id)))
             {
@@ -98,8 +102,10 @@ namespace TvScraper.Scraper
                 .FirstOrDefaultAsync();
 
             var mostRecentId = mostRecentShow?.TvMazeId ?? 0;
+            var pageNumber = (int)Math.Floor(mostRecentId / 250.0);
+            logger.LogInformation($"Starting at page number {pageNumber}, last imported show TvMazeID {mostRecentId}");
 
-            return (int)Math.Floor(mostRecentId / 250.0);
+            return pageNumber;
 
         }
     }
