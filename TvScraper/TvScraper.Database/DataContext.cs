@@ -31,7 +31,7 @@ namespace TvScraper.Database
             modelBuilder.Entity<Show>()
                 .HasMany(s => s.Cast)
                 .WithOne(c => c.Show)
-                .HasForeignKey(c => c.ActorId);
+                .HasForeignKey(c => c.ShowId);
 
 
             modelBuilder.Entity<Actor>().ToTable("Actors");

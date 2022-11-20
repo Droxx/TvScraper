@@ -41,11 +41,15 @@ namespace TvScraper.Scraper
                 {
                     await using AsyncServiceScope asyncScope = scopeFactory.CreateAsyncScope();
 
+
                     var actorScraper = asyncScope.ServiceProvider.GetRequiredService<IActorScraper>();
                     await actorScraper.Execute(token);
 
+
                     var showScraper = asyncScope.ServiceProvider.GetRequiredService<IShowScraper>();
                     await showScraper.Execute(token);
+
+                 
                     
                    
                 }catch(Exception ex)
