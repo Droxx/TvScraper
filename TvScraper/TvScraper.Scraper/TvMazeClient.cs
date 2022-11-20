@@ -33,9 +33,12 @@ namespace TvScraper.Scraper
         {
             await limiter.Wait();
             RestRequest request = new RestRequest(endpoint, Method.Get) {  };
-            foreach(var arg in args)
+            if (args != null)
             {
-                request.AddParameter(arg.Name, arg.Value, ParameterType.QueryString);
+                foreach (var arg in args)
+                {
+                    request.AddParameter(arg.Name, arg.Value, ParameterType.QueryString);
+                }
             }
             RestResponse<T> response = client.Execute<T>(request);
 
@@ -45,6 +48,7 @@ namespace TvScraper.Scraper
             }
             else
             {
+                // TODO: Better error handling
                 if(response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
                     throw new HttpRequestException("(429) Too Many Requests", null, response.StatusCode);

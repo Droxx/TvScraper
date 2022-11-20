@@ -9,8 +9,9 @@ namespace TvScraper.Database.Model
     public class Actor
     {
         public int Id { get; set; }
+        public int TvMazeId { get; set; }
         public string Name { get; set; }
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public IEnumerable<CastMember> Shows { get; set; }
     }
 }

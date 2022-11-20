@@ -12,6 +12,8 @@ namespace TvScraper.Database.Model
         public int TvMazeId { get; set; }
         public string Name { get; set; }
         public string TvMazeUrl { get; set; }
+        public bool ActorsScraped { get; set; }
+        public DateTime LastScrapeDate { get; set; }
         public IEnumerable<CastMember> Cast { get; set; }   
     }
 }

@@ -11,10 +11,9 @@ namespace TvScraper.Scraper
 {
     public class ShowScraper
     {
-        public async Task<ShowCollection> Execute(CancellationToken token)
+        public async Task Execute(CancellationToken token)
         {
             var client = new TvMazeClient();
-            var shows = new List<Show>();
             var page = GetStartingPageNumber();
             IEnumerable<Show> result = null;
             do
@@ -35,11 +34,9 @@ namespace TvScraper.Scraper
                         break;
                     }
                 }
-                shows.AddRange(result);
                 StoreBatch(result);
                 page++;
             } while (result.Count() > 0);
-            return new ShowCollection() { Shows = shows };
         }
 
         private void StoreBatch(IEnumerable<Show> shows)
@@ -61,7 +58,8 @@ namespace TvScraper.Scraper
                     {
                         Name = validShow.Name,
                         TvMazeId = validShow.Id,
-                        TvMazeUrl = validShow.Url
+                        TvMazeUrl = validShow.Url,
+                        LastScrapeDate = DateTime.UtcNow
                     });
                 }
 

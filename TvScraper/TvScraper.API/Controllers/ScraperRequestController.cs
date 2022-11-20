@@ -18,8 +18,11 @@ namespace TvScraper.API.Controllers
         [HttpGet(Name = "GetScraperRequest")]
         public async Task Get(CancellationToken token)
         {
+            // TODO: Make this a service that runs on boot and every X hours
             var showGetter = new ShowScraper();
-            await showGetter.Execute(token);
+            var actorGetter = new ActorScraper();
+            await actorGetter.Execute(token);
+            //await showGetter.Execute(token);
         }
     }
 }
