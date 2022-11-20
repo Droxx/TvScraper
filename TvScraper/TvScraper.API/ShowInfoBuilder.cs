@@ -20,7 +20,9 @@ namespace TvScraper.API
                 {
                     Name = s.Name,
                     Id = s.Id,
-                    Cast = s.Cast.Select(c => new CastInfo
+                    Cast = s.Cast
+                    .OrderByDescending(c => c.Actor.DateOfBirth)
+                    .Select(c => new CastInfo
                     {
                         Id = c.Actor.Id,
                         Birthday = c.Actor.DateOfBirth,
