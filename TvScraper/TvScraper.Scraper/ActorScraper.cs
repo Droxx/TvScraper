@@ -114,7 +114,7 @@ namespace TvScraper.Scraper
                     TvMazeId = validActor.Id
                 });
             }
-            logger.LogDebug($"Duplicates removed, writing {toStore} actors to database");
+            logger.LogDebug($"Duplicates removed, writing {toStore.Count()} actors to database");
 
             database.Actors.AddRange(toStore);
         }
