@@ -36,6 +36,11 @@ namespace TvScraper.Scraper
             IEnumerable<CastMember> result = null;
             do
             {
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 foreach (var showId in showsToScrape)
                 {
                     try

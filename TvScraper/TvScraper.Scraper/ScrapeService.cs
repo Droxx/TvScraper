@@ -37,20 +37,19 @@ namespace TvScraper.Scraper
             using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromHours(12));
             do
             {
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
                 try
                 {
                     await using AsyncServiceScope asyncScope = scopeFactory.CreateAsyncScope();
 
-
                     var actorScraper = asyncScope.ServiceProvider.GetRequiredService<IActorScraper>();
                     await actorScraper.Execute(token);
 
-
                     var showScraper = asyncScope.ServiceProvider.GetRequiredService<IShowScraper>();
                     await showScraper.Execute(token);
-
-                 
-                    
                    
                 }catch(Exception ex)
                 {
