@@ -124,22 +124,26 @@ namespace TvScraper.Scraper
             logger.LogDebug($"Storing {cast.Count()} links for show {showId}");
             var localDbShow = database.Shows.FirstOrDefault(s => s.TvMazeId == showId);
 
-            foreach (var member in cast)
+            if (localDbShow != null)
             {
-                var localDbCast = database.Actors.FirstOrDefault(a => a.TvMazeId == member.Person.Id);
-
-                if (localDbShow == null || localDbCast == null)
+                foreach (var member in cast)
                 {
-                    throw new KeyNotFoundException();
+                    var localDbCast = database.Actors.FirstOrDefault(a => a.TvMazeId == member.Person.Id);
+
+                    if (localDbCast == null)
+                    {
+                        throw new KeyNotFoundException();
+                    }
+
+                    database.CastMembers.Add(new Database.Model.CastMember
+                    {
+                        ActorId = localDbCast.Id,
+                        ShowId = localDbShow.Id
+                    });
                 }
-
-                database.CastMembers.Add(new Database.Model.CastMember
-                {
-                    ActorId = localDbCast.Id,
-                    ShowId = localDbShow.Id
-                });
+                localDbShow.LastScrapeDate = DateTime.UtcNow;
+                localDbShow.ActorsScraped = true;
             }
-            localDbShow.ActorsScraped = true;
         }
 
     }
