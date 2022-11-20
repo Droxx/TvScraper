@@ -9,6 +9,7 @@ using TvScraper.Scraper.TvMazeModel;
 
 namespace TvScraper.Scraper
 {
+
     public class ActorScraper
     {
         public async Task Execute(CancellationToken token)

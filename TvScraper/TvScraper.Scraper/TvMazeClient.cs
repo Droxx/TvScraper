@@ -14,7 +14,12 @@ using System.Xml.Linq;
 
 namespace TvScraper.Scraper
 {
-    internal class TvMazeClient
+    public interface ITvMazeClient
+    {
+        Task<T> Get<T>(string endpoint, CancellationToken token, IEnumerable<GetParameter> args = null);
+    }
+
+    public class TvMazeClient : ITvMazeClient
     {
         private const string BASE_URL = "https://api.tvmaze.com/";
 

@@ -1,4 +1,5 @@
 using TvScraper.Database;
+using TvScraper.Scraper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<DataContext>();
+
+builder.Services.AddSingleton<ITvMazeClient, TvMazeClient>();
+builder.Services.AddSingleton<ScrapeService>();
+builder.Services.AddHostedService(
+    provider => provider.GetRequiredService<ScrapeService>());
 
 var app = builder.Build();
 

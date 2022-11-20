@@ -21,8 +21,8 @@ namespace TvScraper.API.Controllers
             // TODO: Make this a service that runs on boot and every X hours
             var showGetter = new ShowScraper();
             var actorGetter = new ActorScraper();
-            await actorGetter.Execute(token);
-            //await showGetter.Execute(token);
+            //await actorGetter.Execute(token);
+            await showGetter.Execute(token);
         }
     }
 }
