@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -12,17 +13,18 @@ namespace TvScraper.Scraper
     public class ScrapeService : BackgroundService
     {
         private readonly ILogger<ScrapeService> logger;
-        private readonly TvMazeClient mazeClient;
+
+        private readonly IServiceScopeFactory scopeFactory;
 
         public bool IsEnabled { get; set; } = true;
         private int executionCount = 0;
 
         public ScrapeService(
             ILogger<ScrapeService> logger,
-            ITvMazeClient mazeClient)
+            IServiceScopeFactory scopeFactory)
         {
-            logger = logger;
-            mazeClient = mazeClient;
+            this.logger = logger;
+            this.scopeFactory= scopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken token)
@@ -37,15 +39,15 @@ namespace TvScraper.Scraper
             {
                 try
                 {
-                    using (var showScraper = new ShowScraper())
-                    {
-                        await showScraper.Execute(token);
-                    }
+                    await using AsyncServiceScope asyncScope = scopeFactory.CreateAsyncScope();
 
-                    using (var actorScraper = new ActorScraper())
-                    {
-                        await actorScraper.Execute(token);
-                    }
+                    var actorScraper = asyncScope.ServiceProvider.GetRequiredService<IActorScraper>();
+                    await actorScraper.Execute(token);
+
+                    var showScraper = asyncScope.ServiceProvider.GetRequiredService<IShowScraper>();
+                    await showScraper.Execute(token);
+                    
+                   
                 }catch(Exception ex)
                 {
                     logger.LogError(ex, "Error thrown while scraping!");

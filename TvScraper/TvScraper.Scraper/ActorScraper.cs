@@ -9,14 +9,20 @@ using TvScraper.Scraper.TvMazeModel;
 
 namespace TvScraper.Scraper
 {
+    public interface IActorScraper
+    {
+        Task Execute(CancellationToken token);
+    }
 
-    public class ActorScraper : IDisposable
+    public class ActorScraper : IDisposable, IActorScraper
     {
         private readonly DataContext database;
+        private ITvMazeClient client;
 
-        public ActorScraper()
+        public ActorScraper(ITvMazeClient client)
         {
             database = new DataContext();
+            this.client = client;   
         }
 
         public void Dispose()
@@ -26,8 +32,6 @@ namespace TvScraper.Scraper
     
         public async Task Execute(CancellationToken token)
         {
-            // TODO: Make sure this client is shared globally
-            var client = new TvMazeClient();
             var showsToScrape = GetNextXScrapingBatch(250);
             IEnumerable<CastMember> result = null;
             do
@@ -48,6 +52,7 @@ namespace TvScraper.Scraper
                         continue;
                     }
                     StoreActors(result.Select(c => c.Person));
+                    database.SaveChanges();
                     StoreLinks(showId, result);
                     database.SaveChanges();
                 }

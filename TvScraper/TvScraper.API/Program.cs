@@ -13,6 +13,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>();
 
 builder.Services.AddSingleton<ITvMazeClient, TvMazeClient>();
+builder.Services.AddScoped<IActorScraper, ActorScraper>();
+builder.Services.AddScoped<IShowScraper, ShowScraper>();
 builder.Services.AddSingleton<ScrapeService>();
 builder.Services.AddHostedService(
     provider => provider.GetRequiredService<ScrapeService>());

@@ -9,13 +9,20 @@ using TvScraper.Scraper.TvMazeModel;
 
 namespace TvScraper.Scraper
 {
-    public class ShowScraper : IDisposable
+    public interface IShowScraper
+    {
+        Task Execute(CancellationToken token);
+    }
+
+    public class ShowScraper : IDisposable, IShowScraper
     {
         private readonly DataContext database;
+        private readonly ITvMazeClient client;
 
-        public ShowScraper()
+        public ShowScraper(ITvMazeClient client)
         {
             database = new DataContext();
+            this.client = client;   
         }
 
         public void Dispose()
@@ -25,7 +32,6 @@ namespace TvScraper.Scraper
 
         public async Task Execute(CancellationToken token)
         {
-            var client = new TvMazeClient();
             var page = GetStartingPageNumber();
             IEnumerable<Show> result = null;
             do
