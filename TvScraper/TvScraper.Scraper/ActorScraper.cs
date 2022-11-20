@@ -56,6 +56,8 @@ namespace TvScraper.Scraper
                     {
                         if (ex.StatusCode == HttpStatusCode.TooManyRequests)
                         {
+                            // Wait for 5 seconds, we may have hit a temporary strict rate limit
+                            await Task.Delay(5000);
                             continue;
                         }
                         if (ex.StatusCode == HttpStatusCode.NotFound)
