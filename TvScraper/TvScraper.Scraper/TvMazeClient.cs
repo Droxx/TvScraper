@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -22,16 +23,17 @@ namespace TvScraper.Scraper
     public class TvMazeClient : ITvMazeClient
     {
         private const string BASE_URL = "https://api.tvmaze.com/";
-
+        private readonly ILogger<TvMazeClient> logger;  
 
         private readonly RestClient client;
         private readonly RateLimiter limiter;
 
-        public TvMazeClient() 
+        public TvMazeClient(ILogger<TvMazeClient> logger) 
         {
             Uri baseUrl = new Uri(BASE_URL);
             client = new RestClient(baseUrl);
             limiter = new RateLimiter(20, TimeSpan.FromSeconds(11));
+            this.logger = logger;
         }
 
         public async Task<T> Get<T>(string endpoint, CancellationToken token, IEnumerable<GetParameter> args = null)
@@ -51,9 +53,8 @@ namespace TvScraper.Scraper
             {
                 return response.Data;
             }
-            else
+            else if(response != null)
             {
-                // TODO: Better error handling
                 if(response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
                     throw new HttpRequestException("(429) Too Many Requests", null, response.StatusCode);
@@ -63,8 +64,16 @@ namespace TvScraper.Scraper
                     throw new HttpRequestException("(404) Not Found", null, response.StatusCode);
                 }
                 Console.WriteLine(response?.ErrorMessage);
-                return default(T);
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    throw new HttpRequestException($"Unexpected error code returned {response?.ErrorMessage}", new HttpRequestException("Unexpected error code returned", null, response.StatusCode));
+                }
             }
+            else
+            {
+                logger.LogError($"Null response recieved from RestSharp, Endpoint {endpoint}");
+            }
+            return default(T);
         }
 
     }

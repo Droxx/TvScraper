@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,12 +19,14 @@ namespace TvScraper.Scraper
     public class ActorScraper : IDisposable, IActorScraper
     {
         private readonly DataContext database;
+        private ILogger<ActorScraper> logger;
         private ITvMazeClient client;
 
-        public ActorScraper(ITvMazeClient client)
+        public ActorScraper(ITvMazeClient client, ILogger<ActorScraper> logger)
         {
             database = new DataContext();
-            this.client = client;   
+            this.client = client;
+            this.logger = logger;   
         }
 
         public void Dispose()
@@ -50,11 +53,20 @@ namespace TvScraper.Scraper
                     }
                     catch (HttpRequestException ex)
                     {
-                        // TODO: Catch errors
+                        if (ex.StatusCode == HttpStatusCode.TooManyRequests)
+                        {
+                            continue;
+                        }
+                        if (ex.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            break;
+                        }
+
+                        logger.LogError("HTTPRequest exception encountered when scraping actors", ex);
                     }
                     if(result == null)
                     {
-                        // TODO: Log error
+                        logger.LogError($"A null result was returned when scraping actors for show {showId}")
                         continue;
                     }
                     StoreActors(result.Select(c => c.Person));

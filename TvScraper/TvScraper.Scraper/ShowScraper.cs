@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +20,13 @@ namespace TvScraper.Scraper
     {
         private readonly DataContext database;
         private readonly ITvMazeClient client;
+        private readonly ILogger<ShowScraper> logger;
 
-        public ShowScraper(ITvMazeClient client)
+        public ShowScraper(ITvMazeClient client, ILogger<ShowScraper> logger)
         {
             database = new DataContext();
-            this.client = client;   
+            this.client = client;
+            this.logger = logger;
         }
 
         public void Dispose()
@@ -52,6 +55,8 @@ namespace TvScraper.Scraper
                     {
                         break;
                     }
+
+                    logger.LogError("HTTPRequest exception encountered when scraping shows", ex);
                 }
                 await StoreBatch(result);
                 await database.SaveChangesAsync();
