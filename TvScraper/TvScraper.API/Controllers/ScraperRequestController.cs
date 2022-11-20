@@ -16,10 +16,10 @@ namespace TvScraper.API.Controllers
         }
 
         [HttpGet(Name = "GetScraperRequest")]
-        public void Get()
+        public async Task Get(CancellationToken token)
         {
-            var showGetter = new GetShows();
-            showGetter.Execute();
+            var showGetter = new ShowScraper();
+            await showGetter.Execute(token);
         }
     }
 }

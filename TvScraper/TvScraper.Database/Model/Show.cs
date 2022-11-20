@@ -9,7 +9,9 @@ namespace TvScraper.Database.Model
     public class Show
     {
         public int Id { get; set; }
+        public int TvMazeId { get; set; }
         public string Name { get; set; }
+        public string TvMazeUrl { get; set; }
         public IEnumerable<CastMember> Cast { get; set; }   
     }
 }
