@@ -31,7 +31,11 @@ namespace TvScraper.Scraper
         public TvMazeClient(ILogger<TvMazeClient> logger) 
         {
             Uri baseUrl = new Uri(BASE_URL);
-            client = new RestClient(baseUrl);
+            client = new RestClient(new RestClientOptions
+            {
+                BaseUrl = baseUrl,
+                UserAgent = "RTLCodingChallenge michaelstocks1ATgmail.com"
+            });
             limiter = new RateLimiter(20, TimeSpan.FromSeconds(11));
             this.logger = logger;
         }
